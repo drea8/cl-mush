@@ -86,8 +86,6 @@
 		  )
 	     out)))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 (defun color-wrap (code text)
   (format nil (c+ code text "~c[0m") #\ESC #\ESC))
 

@@ -10,7 +10,7 @@
 (in-package :mush)
 (use-package '(:usocket))	       
 
-(load "src/config.sexp")
+(load "config.sexp")
 (load "src/utils.lisp")
 (load "src/pools.lisp")
 (load "src/thing.lisp")
