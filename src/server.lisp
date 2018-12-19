@@ -1,7 +1,8 @@
-(ql:quickload '(:usocket
-		:cl-ppcre
-		:bordeaux-threads
-		:uuid))
+(defun load-dependencies ()
+  (ql:quickload '(:usocket
+		  :cl-ppcre
+		  :bordeaux-threads
+		  )))
 
 (defpackage :mush
   (:use :cl :usocket))
@@ -9,13 +10,13 @@
 (in-package :mush)
 (use-package '(:usocket))	       
 
-(load "config.sexp")
-(load "utils.lisp")
-(load "pools.lisp")
-(load "thing.lisp")
-(load "ghost.lisp")
-(load "soul.lisp")
-(load "client.lisp")
+(load "src/config.sexp")
+(load "src/utils.lisp")
+(load "src/pools.lisp")
+(load "src/thing.lisp")
+(load "src/ghost.lisp")
+(load "src/soul.lisp")
+(load "src/client.lisp")
 
 (defparameter server-thread nil)
 (defparameter server-socket nil)
@@ -81,7 +82,7 @@
 	 
 
 (defun server-loop (which-socket port &optional (log-stream *standard-output*))
-  (eval `(setq ,which-socket (socket-listen "127.0.0.1" ,port :reuse-address t)))
+  (eval `(setq ,which-socket (socket-listen "0.0.0.0" ,port :reuse-address t)))
   (setq connections (list (symbol-value which-socket)))
   (let* ((server-running t))    
     (loop until (not server-running) do
