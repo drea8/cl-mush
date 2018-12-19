@@ -62,7 +62,7 @@
    'ghost
    :hight "Daddybob"
    :poolid 4
-   :ich (uuid:make-v4-uuid)
+   :ich (random (* 256 16))
    :rsight "an old man walking"
    :sight "Patriarch of the Nichols family."
    :keys '("man" "old" "daddybob" "bob")))

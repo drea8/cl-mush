@@ -1,2 +1,2 @@
 
-(defparameter root-dir "/root/mush/things/")
+(defparameter root-dir "/root/cl-mush/src/")

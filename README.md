@@ -1,3 +1,8 @@
 # CL-MUSH
 * Common Lisp MUSH Environment Engine
 * Multi-User TCP Server
+
+# Install
+* (mush::load-dependencies)
+* (save-lisp-and-die "cl-mush.img")
+* sbcl --core cl-mush.img --load "src/server.lisp"

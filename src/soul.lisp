@@ -14,7 +14,7 @@
    :know 1
    :poolid 4
    :conn conn
-   :ich (uuid:make-v4-uuid)
+   :ich (random (* 256 16))
    :rsight "a sickly pale ghost floats here and there."		 
    :sight "A faint greenish apparition floating about."
    :keys (list (string-downcase hight)))))

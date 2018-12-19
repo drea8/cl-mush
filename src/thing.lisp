@@ -34,7 +34,7 @@
   `(progn     
      (if (or (not (boundp (quote ,symbol))) (not (typep ,symbol 'thing)))
 	 (progn (setq ,symbol (make-instance 'thing))
-		(setf (ich ,symbol) (uuid:make-v4-uuid))))
+		(setf (ich ,symbol) (random (* 256 16)))))
      (if (not (member ,symbol things :test #'ichp))
 	 (push ,symbol things))
      ,@(loop for i from 0 upto (1- (length slots)) collect

@@ -81,5 +81,5 @@
 
 
 (defun load-pools ()
-  (setq pools (read-things-file 'pool "pools.sexp")))
+  (setq pools (read-things-file 'pool "things/pools.sexp")))
 (load-pools)
