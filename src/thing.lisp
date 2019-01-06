@@ -12,21 +12,6 @@
   triggers 
   state states)
 
-(defun ichp (x y)
-  (equal (ich x) (ich y)))
-
-
-
-(defun spawn (thing pool)
-  (set-pool thing (id pool))
-  (push thing (things pool)))
-
-(defun set-pool (ghost poolid)
-  (setf (poolid ghost) poolid))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;
-
 (defparameter things '() )
 
 
@@ -34,13 +19,25 @@
   `(progn     
      (if (or (not (boundp (quote ,symbol))) (not (typep ,symbol 'thing)))
 	 (progn (setq ,symbol (make-instance 'thing))
-		(setf (ich ,symbol) (random (* 256 16)))))
+		(setf (ich ,symbol) (uuid-integer))))
      (if (not (member ,symbol things :test #'ichp))
 	 (push ,symbol things))
      ,@(loop for i from 0 upto (1- (length slots)) collect
 	    `(setf (,(intern (symbol-name (nth i slots))) ,symbol) ,(nth (incf i) slots)))))
 
-		     
+(defun ichp (x y)
+  (equal (ich x) (ich y)))
+
+(defun spawn (thing pool)
+  (set-pool thing (id pool))
+  (push thing (things pool)))
+
+(defun set-pool (thing poolid)
+  (setf (poolid thing) poolid))
+
+
+
+
 (make-thing brochure
    :hight "a brochure"
    :poolid 4   
@@ -74,10 +71,9 @@
 
 
 (defun spawn-things ()
-  ;;(spawn brochure (pool 4))
-  ;;(spawn sea-urchin (pool 4))
-  ;;(spawn tape (pool 8))
+  (spawn brochure (pool 4))
+  (spawn sea-urchin (pool 4))
+  (spawn tape (pool 8))
   )
 
-(setf (Things (pool 4)) '())
 (spawn-things)

@@ -1,9 +1,5 @@
 (in-package :mush)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(Client Utilities)
-;;
-
 (defparameter terminal-width 60)
 
 (defun send (target str)
@@ -40,8 +36,15 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(User Command Loop)
+;; (User Command Loop)
 ;;
+
+(defun welcome-connection (stream)
+  (send-lines
+   stream
+   '("" "" "" "" ""
+     "The soul leaves the body..."     
+     )))
 
 (defun welcome-soul (conn stream user)
   (send-lines
@@ -74,7 +77,7 @@
   
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(Soul Being)
+;; (Soul Being)
 ;;
 
 
@@ -99,6 +102,7 @@
      ("phight" (phight soul pool rest-msg))
      ("psight" (psight soul pool rest-msg))
      (("help" "h" "?") (help soul))
+     (("who" "online") (who soul))
      ("!" (being user conn stream soul (last-doing user)))
      )
 
@@ -117,7 +121,7 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(Soul Doings)
+;; (Soul Doings)
 ;;
 
 
@@ -179,9 +183,20 @@
 	       ))))
 			        
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(Help)
+;; (Help)
 ;;
 
+(defun who (soul)
+  (setq who-str
+	(c+ "There are "
+	    (write-to-string (length (rest connections)))
+	    " souls connected including you."))
+  ;; (loop for conn in connections
+  ;;    if (not (typep conn 'stream-server-usocket)) do	     
+  ;;      (send (socket-stream conn)
+  ;; 	     (c+ (sight soul) " saith, " msg)))
+  (send soul who-str))
+  
 
 (defun help (soul)
   (newline soul)
@@ -190,6 +205,7 @@
    (list "look, l"
 	 "look <thing>"
 	 "chat, c <global-message>"
+	 "who (checks other connected peers)"
 	 "say, s <local-message>"
 	 "emote, e <local-act>"
 	 "north, east, west, south, up, down, n, e, w, s, u, d"
@@ -207,7 +223,7 @@
      "pmake 7")))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(Knowing)
+;; (Knowing)
 ;;
 
 (defun iknow (soul)

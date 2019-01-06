@@ -2,12 +2,10 @@
 (in-package :mush)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
-'(Ghosts)
+;; (Ghosts)
 ;;
 
-(defthing ghost (thing)
-  )
-
+(defthing ghost (thing))
 
 (defun ghost-pool (ghost)
     (pool (poolid ghost)))
@@ -41,20 +39,16 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
-'(Ghost Actor Model)
-;; TO DO
-'(register triggers
-  -> check wildcard user command against triggers
-  -> change state)
-;;
+;; (Ghost Actor Model)
+;; ;; TO DO
+;; '(register triggers
+;;   -> check wildcard user command against triggers
+;;   -> change state)
+;; ;;
 
 
 (defun register-trigger (ghost trigger)
   )
-
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun bob ()
@@ -62,7 +56,7 @@
    'ghost
    :hight "Daddybob"
    :poolid 4
-   :ich (random (* 256 16))
+   :ich (uuid-integer)
    :rsight "an old man walking"
    :sight "Patriarch of the Nichols family."
    :keys '("man" "old" "daddybob" "bob")))

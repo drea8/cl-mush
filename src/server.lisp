@@ -1,14 +1,13 @@
-(defun load-dependencies ()
+(defun mush-dependencies ()
   (ql:quickload '(:usocket
 		  :cl-ppcre
 		  :bordeaux-threads
-		  )))
+		  :local-time)))
 
 (defpackage :mush
-  (:use :cl :usocket))
+  (:use :cl :usocket :bordeaux-threads))
 
 (in-package :mush)
-(use-package '(:usocket))	       
 
 (load "config.sexp")
 (load "src/utils.lisp")
@@ -24,7 +23,6 @@
 (defparameter connections nil)
 (defparameter users nil)
 
-
 (defthing mush-user (stream-usocket)
   usocket-stream
   soul
@@ -33,18 +31,7 @@
   packet-counter
   last-doing)
 
-
-
-(defun welcome-connection (stream)
-  (send-lines
-   stream
-   '("" "" "" "" "" ""
-     "The soul leaves the body..."     
-     )))
-  
-
-
-(defun new-connection (usocket-stream conn-stream log-stream)
+(defun make-new-connection (usocket-stream conn-stream log-stream)
   (print `(connected ,(get-peer-address usocket-stream)
 		     ,(get-peer-port usocket-stream)))
   (push `(,usocket-stream
@@ -67,19 +54,26 @@
 (defun conn-user (usocket-stream)
   (second (assoc usocket-stream users :test #'equal)))
 
+(defun timestamp ()
+  (local-time:universal-to-timestamp (get-universal-time)))
 
-(defun overflow-check (user)  
-  (setf (packet-counter user) (1+ (packet-counter user)))
-  (cond ((> (packet-counter user) 10)
-	 (setf (packet-counter user) 0)
-	 (setq now (get-universal-time))
-	 (cond ((< (- now (last-packets-time user)) 3)
+(defun overflow-check (user)
+  (let ((now (get-universal-time)))
+    (setf (packet-counter user) (1+ (packet-counter user)))
+    (cond ((> (packet-counter user) 10)
+	   (setf (packet-counter user) 0)	 
+	   (cond ((< (- now (last-packets-time user)) 3)
 		(print `(,user packet rate exceeded))
-		(send (soul user) "Packet rate exceeded, you might be a bot or spam, bye.")
-		(clean-soul soul)
-		(error 'SB-INT:SIMPLE-STREAM-ERROR)))
-	 (setf (last-packets-time user) now))))
-	 
+		  (send (soul user) "Packet rate exceeded, you might be a bot or spam, bye.")
+		  (clean-soul (soul user))
+		  (error 'SB-INT:SIMPLE-STREAM-ERROR)))
+	   (setf (last-packets-time user) now)))))
+
+
+(defun existing-connection (socket stream user)
+  (overflow-check user)
+  (handle-user user socket stream))
+
 
 (defun server-loop (which-socket port &optional (log-stream *standard-output*))
   (eval `(setq ,which-socket (socket-listen "0.0.0.0" ,port :reuse-address t)))
@@ -91,20 +85,17 @@
 	      (unwind-protect
 		   (handler-case 
 		       (progn
-			 (if (typep conn 'stream-server-usocket)
-			     ;; New Connection
+			 (if (typep conn 'stream-server-usocket)			     
 			     (let* ((usocket-stream (socket-accept conn))
 				    (conn-stream (socket-stream usocket-stream)))
-			       (setq new-conn (new-connection usocket-stream conn-stream log-stream))
+			       (setq new-conn (make-new-connection usocket-stream conn-stream log-stream))
 			       (push new-conn connections)
 			       (setq conn new-conn)))
-			 
-			 ;; Existing Connection
+			 			 
 			 (let* ((socket conn)			    				     
 				(stream (socket-stream conn))
 				(user (conn-user conn)))
-			   (overflow-check user)
-			   (handle-user user conn stream)))
+			   (existing-connection socket stream user)))
 		     
 		     (SB-BSD-SOCKETS:NOT-CONNECTED-ERROR ()
 		       (print "not-connected")
@@ -128,7 +119,6 @@
   
 
 (defun mush-stop ()
-  ;; lsof -i -P
   (bt:destroy-thread server-thread)
   (ignore-errors (socket-close server-socket))
   (setq server-running nil
@@ -136,9 +126,7 @@
   (print '(SERVER THREAD DESTROYED)))
 
 (defun mush-freeze ()
-  (bt:destroy-thread server-thread)
-  ;; (bt:interrupt-thread server-thread (lambda (x) (read)))
-  )
+  (bt:destroy-thread server-thread))
 
 (defun mush-restart ()
   (mush-stop)

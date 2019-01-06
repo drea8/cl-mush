@@ -14,7 +14,7 @@
    :know 1
    :poolid 4
    :conn conn
-   :ich (random (* 256 16))
+   :ich (uuid-integer)
    :rsight "a sickly pale ghost floats here and there."		 
    :sight "A faint greenish apparition floating about."
    :keys (list (string-downcase hight)))))

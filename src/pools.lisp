@@ -5,12 +5,11 @@
 
 
 (defthing pool ()
-   id
-   hight
-   sight
-   paths
-   things)
-
+  id
+  hight
+  sight
+  paths
+  things)
 
 
 (defun pool-data (pool)
@@ -76,8 +75,6 @@
    ("up" "down")
    ("down" "up")))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 (defun load-pools ()

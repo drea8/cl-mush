@@ -1,7 +1,25 @@
 
 (in-package :mush)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmacro defthing (class-name superclass &rest fields)
+  `(defclass ,class-name ,superclass
+	    (,@(loop for field in fields collect
+		    `(,field :initarg ,(intern (symbol-name field) "KEYWORD")
+			     :accessor ,field
+			     :initform '() )))))
+
+(defun read-things-file (kind file)
+  (with-open-file (stream (c+ root-dir file)
+			:direction :input)
+    (let ((things (read stream)))
+      (loop for thing in things collect
+	   (let ((out (make-instance kind)))
+	     (loop for field in thing do
+		  (eval (list 'setf (list (first field) out) `(quote ,(second field)))))		  
+	     out)))))
+
+(defun uuid-integer () (random (* 256 256)))
 
 (defun read-all (stream)
   (loop for char = (read-char-no-hang stream nil :eof)
@@ -62,29 +80,6 @@
                           collect `((member ,strval (quote ,(if (listp s) s (list s))) :test #'string=) ,@f))))
     `(let ((,strval ,str)) (cond ,@cond-body))))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-'(Thing System)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-(defmacro defthing (class-name superclass &rest fields)
-  `(defclass ,class-name ,superclass
-	    (,@(loop for field in fields collect
-		    `(,field :initarg ,(intern (symbol-name field) "KEYWORD")
-			     :accessor ,field
-			     :initform '() )))))
-
-(defun read-things-file (kind file)
-  (with-open-file (stream (c+ root-dir file)
-			:direction :input)
-    (let ((things (read stream)))
-      (loop for thing in things collect
-	   (let ((out (make-instance kind)))
-	     (loop for field in thing do
-		  (eval (list 'setf (list (first field) out) `(quote ,(second field))))
-		  )
-	     out)))))
 
 (defun color-wrap (code text)
   (format nil (c+ code text "~c[0m") #\ESC #\ESC))
