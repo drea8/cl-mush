@@ -46,34 +46,111 @@
      "The soul leaves the body..."     
      )))
 
-(defun welcome-soul (conn stream user)
-  (send-lines
-   stream	   
-   '(""))       
+(defun welcome-soul (conn stream user)  
   (setf (soul user) (new-soul conn))
-  (look (soul user) (ghost-pool (soul user)))
+  (setf (conn (soul user)) conn)
+  (send (soul user)
+	"Say your name or 'new' for a new soul.")
+  ;; (look (soul user) (ghost-pool (soul user)))  
   (soul user))
+  
+
+(defun logged-in? (soul)
+  (member (hight soul) souls-connected :test #'string))
+  
 
 (defun handle-user (user conn stream)
   (let* ((soul (soul user))
 	 (msg (remove #\Newline (remove #\Return (read-all stream)))))
-
-    ;; soul Reincarnate
-    (if (null soul)
+        
+    (if soul
+	(soul-cmd user conn stream soul msg)
 	(progn (setq soul (welcome-soul conn stream user))
-	       (push soul (things (ghost-pool soul)))))
-    (user-cmd user conn stream soul msg)
-    ))
-
-
-(defun user-cmd (user conn stream soul msg)      
-  (print `(Saith ,soul ,msg))
-  (if (equal msg "quit")
-      (progn (close-connection conn) (clean-soul soul))
-      (progn
-	(if (and soul (not (equal msg "")))
-	    (being user conn stream soul msg))
+	       
+	       )	
 	)))
+
+
+
+(defun soul-cmd (user conn stream soul msg)  
+  (print `(Saith ,soul ,msg))
+  
+  (if (and (null (password soul))
+	   (null (hight soul))
+	   (soul-new soul))
+      (progn
+	(setf (soulhight soul) msg)
+	(setf (hight soul) msg)
+	(send soul (c+ "New name is " msg))
+	(send soul "Enter a strong and memorable password"))
+      (progn
+	
+	(if (null (soulhight soul))
+	    (progn
+	(if (equal msg "new")
+	    (progn
+	      (setf (soul-new soul) t)
+	      (send soul "Come up with a good name.")	      
+	      )
+	    (if (not (soul-new soul))
+		(progn
+		  (setf (soulhight soul) msg)
+		  (setf (hight soul) msg)	      
+		  
+		  (send soul "Enter your password: ")
+		  ))
+	    ))
+	    (progn
+	      (if (and (soulhight soul) (null (password soul)))
+		  
+		  (progn
+		    (setf (password soul) msg)
+
+		    (if (soul-new soul)
+			(progn
+			  (send soul "New soul created, traveling to another world...")
+			  (push soul souls-accounts)
+			  (write-souls)
+			  )
+			(setq soul (authorize-soul (soulhight soul)
+						   (password soul)))
+			)
+		    
+		    (setf (soul-new soul) nil)
+		    (setf (conn soul) conn)	      
+		    (push soul (things (ghost-pool soul)))
+		    (push soul souls)	      
+		    (look soul (ghost-pool soul))	      
+		    ))
+	      
+	      (if (equal msg "quit")
+		  (progn (close-connection conn) (clean-soul soul))
+		  
+		  (if (and soul
+			   (not (equal msg ""))		     
+			   (soulhight soul)
+			   (password soul))
+		      (if (authorize-soul (soulhight soul)
+					  (password soul))
+			  (progn
+			    (if (null (embodied soul))
+				(progn
+				  (send soul "your soul enters this world")
+				  (setf (embodied soul) t)))
+			    (being user conn stream soul msg))		      
+			  (progn
+			    (send soul "Unknown soul with given name and password, bye.")
+			    (clean-soul soul)))		    		
+		      ))
+	      ))))
+  )
+
+(defun authorize-soul (soulhight password)
+  (loop for i in souls-accounts do
+     (if (and (string= soulhight (soulhight i))
+	     (string= password (password i)))
+	 (return i))
+     finally (return nil)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
