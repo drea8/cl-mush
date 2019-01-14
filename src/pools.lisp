@@ -22,7 +22,7 @@
 
 (defun write-pools ()
   (print `(writing pool data))
-  (with-open-file (stream (c+ root-dir "pools.sexp")
+  (with-open-file (stream (c+ root-dir "things/pools.sexp")
 			  :direction :output
 			  :if-exists :supersede
 			  :if-does-not-exist :create)

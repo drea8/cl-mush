@@ -74,7 +74,7 @@
 	(if (and soul (not (equal msg "")))
 	    (being user conn stream soul msg))
 	)))
-  
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (Soul Being)
@@ -93,7 +93,8 @@
       (if (second split-msg)
 	  (look-at user conn stream soul pool (second split-msg))
 	  (look soul pool)))     
-     (("chat" "c") (ooc-chat user conn stream soul rest-msg))     
+     (("chat" "c") (ooc-chat user conn stream soul rest-msg))
+     (("history" "his") (chat-history user conn stream soul))
      (("say" "s") (say soul rest-msg))
      (("emote" "e") (emote soul rest-msg))     
      ("iknow" (iknow soul))
@@ -125,12 +126,25 @@
 ;;
 
 
-
+(defun sendall (msg)
+  (loop for conn in connections
+     if (not (typep conn 'stream-server-usocket)) do	     
+       (send (socket-stream conn) msg)))
+	     
+  
 (defun ooc-chat (user conn stream soul msg)
+  (push msg message-history)
   (loop for conn in connections
      if (not (typep conn 'stream-server-usocket)) do	     
        (send (socket-stream conn)
 	     (c+ (sight soul) " saith, " msg))))
+
+
+(defun chat-history (user conn stream soul)
+  (if (null message-history)
+      (send soul "No chat messages said since server message log startup.")
+      (loop for msg in message-history do
+	   (send soul (c+ "someone said : '" msg "'")))))
 
 
 (defun look (soul pool)
@@ -205,9 +219,10 @@
    (list "look, l"
 	 "look <thing>"
 	 "chat, c <global-message>"
+	 "history, his (returns global message log for server session)"
 	 "who (checks other connected peers)"
-	 "say, s <local-message>"
-	 "emote, e <local-act>"
+	 "say, s <local message in a room>"
+	 "emote, e <local act in a room>"
 	 "north, east, west, south, up, down, n, e, w, s, u, d"
 	 "help, h, ?"
 	 "! (repeats last action)"

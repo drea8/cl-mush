@@ -2,7 +2,10 @@
 
 (defthing soul (ghost)
   conn
-  know)
+  know
+  soulhight
+  password  
+  )
   
 
 (defun new-soul (conn)
@@ -10,6 +13,8 @@
   (let* ((hight "Kjenn"))
   (make-instance
    'soul
+   :soulhight "user"
+   :password "pass"
    :hight hight
    :know 1
    :poolid 4

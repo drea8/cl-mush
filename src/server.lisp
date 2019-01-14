@@ -23,6 +23,8 @@
 (defparameter connections nil)
 (defparameter users nil)
 
+(defparameter message-history '() )
+
 (defthing mush-user (stream-usocket)
   usocket-stream
   soul
