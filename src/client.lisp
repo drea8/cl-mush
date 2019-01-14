@@ -210,18 +210,18 @@
 	     
   
 (defun ooc-chat (user conn stream soul msg)
-  (push msg message-history)
+  (push (c+ (hight soul) " said : '" msg "'") message-history)
   (loop for conn in connections
      if (not (typep conn 'stream-server-usocket)) do	     
        (send (socket-stream conn)
-	     (c+ (sight soul) " saith, " msg))))
+	     (c+ (hight soul) " saith, " msg))))
 
 
 (defun chat-history (user conn stream soul)
   (if (null message-history)
       (send soul "No chat messages said since server message log startup.")
       (loop for msg in message-history do
-	   (send soul (c+ "someone said : '" msg "'")))))
+	   (send soul msg))))
 
 
 (defun look (soul pool)
