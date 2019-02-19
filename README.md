@@ -11,7 +11,7 @@
 
 
 # To Do
-* refactor consideration, consolidate
+* design, refactor consideration, clean, consolidate
 * soul-cmd refactor HANDLE-USER (soul user) etc
 * interaction, pmake/mobmake shell
 * auto saving (room, inv, stats)

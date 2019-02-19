@@ -337,8 +337,10 @@
 (defun goto (soul poolid-str)
   (if poolid-str
       (let ((poolid (parse-integer poolid-str)))
-	(teleport soul poolid)
-	(look soul (pool poolid)))))
+	(if (pool poolid)
+	    (progn
+	      (teleport soul poolid)	
+	      (look soul (pool poolid)))))))
       
 
 (defun teleport (ghost poolid)
