@@ -2,23 +2,33 @@
 
 (defparameter terminal-width 60)
 
+(defun octet-terpri (target)
+  "Readable, clean code is understandable; thus it gets optimized into unreadable and messy code.
+   This function is just a terpri equivalent for octet streams instead of character ones."
+  (write-byte (char-code #\newline) target))
+
 (defun send (target str)
   (unwind-protect
        (handler-case 
-	   (progn (setq soul nil)	     
+	   (progn
+	     (setq soul nil)	     
 	     (if (typep target 'soul)
 		 (setq soul target
 		       target (socket-stream (conn target))))
-	     (format target str)
-	     (terpri target)
+	     #| With this, send() can send both strings and plain byte vectors.
+	        Not so sure if it was useful after all but I'm leaving it in.
+	     |#
+	     (write-sequence (or (and (eql (array-element-type str) '(unsigned-byte 8)) str)
+				 (babel:string-to-octets (format nil str)))
+			     target)
+	     (octet-terpri target)
 	     (force-output target))
 	 (SB-BSD-SOCKETS:NOT-CONNECTED-ERROR ()
 	   (print "not-connected") (clean-soul soul))
 	 (SB-INT:CLOSED-STREAM-ERROR ()
 	   (print "closed-stream") (clean-soul soul))
 	 (SB-INT:SIMPLE-STREAM-ERROR ()
-	   (print "broken-pipe-error") (clean-soul soul))
-	 )))
+	   (print "broken-pipe-error") (clean-soul soul)))))
 
 (defun clean-soul (soul)
   (if soul (setf (things (ghost-pool soul))
@@ -27,7 +37,6 @@
 (defun send-bar (stream length)  
   (send stream
 	(c+ "=" (coerce (loop for x from 0 upto length collect #\-) 'string) "=")))
-    
 
 (defun newline (conn-stream &optional times)
   (send conn-stream "")
@@ -38,7 +47,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (User Command Loop)
 ;;
-
+ 
 (defun welcome-connection (stream)
   (send-lines
    stream
@@ -50,8 +59,7 @@
   (setf (soul user) (new-soul conn))
   (setf (conn (soul user)) conn)
   (send (soul user)
-	"Say your name or 'new' for a new soul.")
-  ;; (look (soul user) (ghost-pool (soul user)))  
+	"Say your name or 'new' for a new soul.")  
   (soul user))
   
 
@@ -70,39 +78,35 @@
 	       )	
 	)))
 
-
-
 (defun soul-cmd (user conn stream soul msg)  
   (print `(Saith ,soul ,msg))
   
   (if (and (null (password soul))
-	   (null (hight soul))
+	   (null (hight soul))	   
 	   (soul-new soul))
       (progn
 	(setf (soulhight soul) msg)
 	(setf (hight soul) msg)
 	(send soul (c+ "New name is " msg))
 	(send soul "Enter a strong and memorable password"))
-      (progn
-	
+      (progn	
 	(if (null (soulhight soul))
-	    (progn
-	(if (equal msg "new")
-	    (progn
-	      (setf (soul-new soul) t)
-	      (send soul "Come up with a good name.")	      
-	      )
-	    (if (not (soul-new soul))
-		(progn
-		  (setf (soulhight soul) msg)
-		  (setf (hight soul) msg)	      
-		  
-		  (send soul "Enter your password: ")
+	    (progn ;; no name for soul
+	      (if (equal msg "new")
+		  (progn
+		    (setf (soul-new soul) t)
+		    (send soul "Come up with a good name.")	      
+		    )
+		  (if (not (soul-new soul))
+		      (progn
+			(setf (soulhight soul) msg)
+			(setf (hight soul) msg)	      
+			
+			(send soul "Enter your password: ")
+			))
 		  ))
-	    ))
-	    (progn
+	    (progn ;; password
 	      (if (and (soulhight soul) (null (password soul)))
-		  
 		  (progn
 		    (setf (password soul) msg)
 
@@ -112,38 +116,43 @@
 			  (push soul souls-accounts)
 			  (write-souls)
 			  )
-			(setq soul (authorize-soul (soulhight soul)
-						   (password soul)))
-			)
-		    
-		    (setf (soul-new soul) nil)
-		    (setf (conn soul) conn)	      
-		    (push soul (things (ghost-pool soul)))
-		    (push soul souls)	      
-		    (look soul (ghost-pool soul))	      
+			(setq
+			 soul (authorize-soul (soulhight soul)
+					      (password soul))))			
+		    (if soul
+			(progn
+			  (setf (soul-new soul) nil)
+			  (setf (conn soul) conn)			  
+			  (push soul souls)	      
+			  )
+			(progn
+			  (send stream "Bad user pass combo, sorry")
+			  ))			
 		    ))
 	      
 	      (if (equal msg "quit")
 		  (progn (close-connection conn) (clean-soul soul))
 		  
 		  (if (and soul
-			   (not (equal msg ""))		     
 			   (soulhight soul)
 			   (password soul))
 		      (if (authorize-soul (soulhight soul)
-					  (password soul))
+					  (password soul))			  
 			  (progn
+			    (setq soul (authorize-soul (soulhight soul)
+					  (password soul)))
 			    (if (null (embodied soul))
-				(progn
-				  (send soul "your soul enters this world")
-				  (setf (embodied soul) t)))
-			    (being user conn stream soul msg))		      
+			    	(progn (send soul "Your soul drops into a ghostly body.")
+			    	       (look soul (pool (poolid soul)))
+			    	       (setf (Embodied soul) t)
+			    	       ))
+			    (being user conn stream soul msg))
 			  (progn
 			    (send soul "Unknown soul with given name and password, bye.")
-			    (clean-soul soul)))		    		
-		      ))
-	      ))))
-  )
+			    (clean-soul soul)))))
+		      )))))
+	      
+  
 
 (defun authorize-soul (soulhight password)
   (loop for i in souls-accounts do
@@ -157,44 +166,45 @@
 ;; (Soul Being)
 ;;
 
-
 (defun being (user conn stream soul msg)
-  (let* ((pool (ghost-pool soul))
-	 (split-msg (cl-ppcre:split " " msg))
-	 (rest-msg (join (rest split-msg) " "))
-	 (doing (string-downcase (first split-msg))))
-    
-    (case-string doing
-     
-     (("look" "l")
-      (if (second split-msg)
-	  (look-at user conn stream soul pool (second split-msg))
-	  (look soul pool)))     
-     (("chat" "c") (ooc-chat user conn stream soul rest-msg))
-     (("history" "his") (chat-history user conn stream soul))
-     (("say" "s") (say soul rest-msg))
-     (("emote" "e") (emote soul rest-msg))     
-     ("iknow" (iknow soul))
-     ("pmake" (pmake soul (second split-msg)))
-     ("path" (path soul pool (second split-msg) (third split-msg)))
-     ("phight" (phight soul pool rest-msg))
-     ("psight" (psight soul pool rest-msg))
-     (("help" "h" "?") (help soul))
-     (("who" "online") (who soul))
-     ("!" (being user conn stream soul (last-doing user)))
-     )
+    (let* ((pool (ghost-pool soul))
+	   (split-msg (cl-ppcre:split " " msg))
+	   (rest-msg (join (rest split-msg) " "))
+	   (doing (string-downcase (first split-msg))))
+      
+      (if (null (member soul (things pool) :test #'ichp))
+	  (push soul (things (ghost-pool soul))))
 
-    (if (>= (know soul) 7)
-	(case-string doing
-	 ("goto" (goto soul (second split-msg)))
-	 ("pools" (pools-list soul))
-	 ))    
-    (movement-check user conn stream soul pool msg)
-    (action-check soul pool doing)
-    
-    (if (not (equal doing "!"))
-	(setf (last-doing user) doing))
-  ))
+      (case-string doing		   
+		   (("look" "l")
+		    (if (second split-msg)
+			(look-at user conn stream soul pool (second split-msg))
+			(look soul pool)))     
+		   (("chat" "c") (ooc-chat user conn stream soul rest-msg))
+		   (("history" "his") (chat-history user conn stream soul))
+		   (("say" "s") (say soul rest-msg))
+		   (("emote" "e") (emote soul rest-msg))     
+		   ("iknow" (iknow soul))
+		   ("pmake" (pmake soul (second split-msg) pool))
+		   ("path" (path soul pool (second split-msg) (third split-msg)))
+		   ("phight" (phight soul pool rest-msg))
+		   ("psight" (psight soul pool rest-msg))
+		   (("help" "h" "?") (help soul))
+		   (("who" "online") (who soul))
+		   ("!" (being user conn stream soul (last-doing user)))
+		   )
+
+      (if (>= (know soul) 7)
+      	  (case-string doing
+      		       ("goto" (goto soul (second split-msg)))
+      		       ("pools" (pools-list soul))
+      		       )) 
+      (movement-check user conn stream soul pool msg)
+      (action-check soul pool doing)
+      
+      (if (not (equal doing "!"))
+      	  (setf (last-doing user) doing))
+      ))
 
 
 
@@ -210,34 +220,35 @@
 	     
   
 (defun ooc-chat (user conn stream soul msg)
-  (push msg message-history)
+  (push (c+ (hight soul) " said : '" msg "'") message-history)
   (loop for conn in connections
      if (not (typep conn 'stream-server-usocket)) do	     
        (send (socket-stream conn)
-	     (c+ (sight soul) " saith, " msg))))
+	     (c+ (hight soul) " saith, " msg))))
 
 
 (defun chat-history (user conn stream soul)
   (if (null message-history)
       (send soul "No chat messages said since server message log startup.")
       (loop for msg in message-history do
-	   (send soul (c+ "someone said : '" msg "'")))))
+	   (send soul msg))))
 
 
 (defun look (soul pool)
   (newline soul 3)    
-  (send soul (line-wrap (sight pool) terminal-width))
+  (send soul (line-wrap (sight pool) terminal-width))  
+  (newline soul 1)
+  (if (path-strs pool)      
+      (loop for path-str in (path-strs pool) do
+	   (send soul (c+ path-str " - "
+			  (hight (pool (second (assoc path-str (paths pool))))))))
+      (print `(no paths in ,(id pool))))
   
   (newline soul 1)
-  (loop for path-str in (path-strs pool) do
-       (send soul (c+ path-str " - "
-		      (hight (pool (second (assoc path-str (paths pool))))))))
-  
-  (newline soul 1)
-  
-  (loop for thing in (things pool) 
-     if (not (ichp thing soul)) do
-       (send soul (rsight thing)))
+  (if (things pool)
+      (loop for thing in (things pool) 
+	 if (not (ichp thing soul)) do
+	   (send soul (rsight thing))))
   (newline soul 2)
   )
 
@@ -344,14 +355,16 @@
        (send soul (c+ (id pool) " " (hight pool)))))
 
 
-(defun pmake (soul poolid-str)
+
+(defun pmake (soul poolid-str pool)
   (ignore-errors
     (let ((poolid (parse-integer poolid-str)))
       (cond ((not (pool poolid))
-	     (push (make-instance 'pool
-				  :id poolid
-				  :hight "a padded cell"
-				  :sight "Unlit save for a dim night light behind a gel cube embedded in the corner, the wide mattressed floor is enclosed by cushioned walls rising high towards an unseen ceiling. The cushions and air of this room smell sweetly sterile.")
+	     (push (make-instance
+		    'pool
+		    :id poolid
+		    :hight (hight pool)
+		    :sight (sight pool))
 		   pools)
 	     (write-pools))
 	    ((pool poolid) (send soul (c+ "Pool " poolid-str " already made.")))

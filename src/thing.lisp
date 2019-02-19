@@ -55,6 +55,16 @@
 	       (lambda (thing pool soul)
 		 (emote thing "crawls under a rock in the tide pool"))))
    :keys '("sea" "urchin"))
+
+(make-thing shinai
+   :hight "a pair of shinai"
+   :rsight "a pair of two long shinai are propped upright in the corner"
+   :sight "The shinai is a long bamboo training sword for martial arts in Japan."
+   :poolid 914   
+   :actions '(("spar" "spars"
+	       (lambda (thing pool soul)
+		 (emote thing "are picked up and trained with."))))
+   :keys '("pair" "shinai"))
    
 
 (make-thing tape
@@ -74,6 +84,8 @@
   ;; (spawn brochure (pool 4))
   ;; (spawn sea-urchin (pool 4))
   ;; (spawn tape (pool 8))
+  ;; (spawn shinai (pool 914))
+
   )
 
 (spawn-things)

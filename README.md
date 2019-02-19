@@ -11,13 +11,8 @@
 
 
 # To Do
-* fix pmake pools.sexp write dir problem
-
-* dynamic reloading from T60, editing from bronx
-
-* fix special character entry error
-
-
-* easy edit/dynamic loading of definitions w/o runtimes
-* shell/remote git ease
-* unique user identification generate name/desc from ip/place+count other
+* refactor consideration, consolidate
+* soul-cmd refactor HANDLE-USER (soul user) etc
+* interaction, pmake/mobmake shell
+* auto saving (room, inv, stats)
+* backups (pools/souls), atomic (no-delete) record

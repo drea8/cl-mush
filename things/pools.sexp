@@ -18,7 +18,7 @@
 ((MUSH::ID 6) (MUSH::HIGHT "a padded cell")
  (MUSH::SIGHT
   "Unlit save for a dim night light behind a gel cube embedded in the corner, the wide mattressed floor is enclosed by cushioned walls rising high towards an unseen ceiling. The cushions and air of this room smell sweetly sterile.")
- (MUSH::PATHS (("east" 7))))
+ (MUSH::PATHS (("south" 110) ("east" 7))))
 ((MUSH::ID 7) (MUSH::HIGHT "a wet cell")
  (MUSH::SIGHT
   "Unlit save for a dim night light behind a gel cube embedded in the corner, the wide mattressed floor is enclosed by cushioned walls rising high towards an unseen ceiling. The cushions and air of this room smell sweetly sterile.")
@@ -77,5 +77,9 @@
 ((MUSH::ID 109) (MUSH::HIGHT "dirt slope into the thicket")
  (MUSH::SIGHT
   "Tumbling along a dirt slope brings one from the vine and moss covered entrance to the mansion chamber into a small growth of ferns and tall trees growing many floors down in the middle chamber of this house, which seems to be built like a large bunker. A path from here takes one to a spiral staircase up and down, and bridges to other parts of the house on this floor.")
- (MUSH::PATHS (("south" 108))))
+ (MUSH::PATHS (("west" 110) ("south" 108))))
+((MUSH::ID 110) (MUSH::HIGHT "a ferned ditch")
+ (MUSH::SIGHT
+  "Deep brush of tall ferns and pine obscure the light from above a green canopy of dense tropical growth.")
+ (MUSH::PATHS (("north" 6) ("east" 109))))
 )

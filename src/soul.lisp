@@ -7,7 +7,7 @@
   password
   id
   soul-new
-  embodied
+  embodied  
   )
 
 (defun soul-data (soul)
@@ -15,8 +15,12 @@
     (password ,(password soul))
     (hight ,(hight soul))
     (sight ,(sight soul))
+    (rsight ,(rsight soul))
     (poolid ,(poolid soul))
-    (keys (list ,(string-downcase (hight soul))))    
+    (keys (list ,(string-downcase (hight soul))))
+    (ich ,(ich soul))
+    (know ,(know soul))
+    (embodied nil)
    ))
 
 
@@ -37,8 +41,7 @@
    :hight nil
    :rsight "a sickly pale ghost floats here and there."		 
    :sight "A faint greenish apparition floating about."
-   :poolid (random-pool)   
-   
+   :poolid 900   
    :know 1   
    :conn conn
    
