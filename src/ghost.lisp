@@ -72,7 +72,7 @@
    :sight "en zample"
    :keys '("zample")
    
-   :Aktyr '()   
+   :Aktyr-model '()   
    )
 
 
